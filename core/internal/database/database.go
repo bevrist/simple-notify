@@ -4,11 +4,11 @@ import (
 	"database/sql"
 	"log"
 	"os"
-	"strconv"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
-	_ "github.com/bevrist/simple-notify/core/pkg/api"
+	"github.com/bevrist/simple-notify/core/pkg/api"
 )
 
 var db *sql.DB
@@ -22,43 +22,55 @@ func init() {
 		log.Fatal(err)
 	}
 
-	db, _ = sql.Open("sqlite3", "./data/database.db")
+	db, err = sql.Open("sqlite3", "./data/database.db")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// create main table
-	statement, _ := db.Prepare("CREATE TABLE IF NOT EXISTS db (id INTEGER PRIMARY KEY, firstname TEXT, lastname TEXT)")
+	// timestamp, user_id, message, message_group, message_severity
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS db (timestamp INTEGER PRIMARY KEY, user_id TEXT, message TEXT, message_group TEXT, message_severity TEXT)")
+	if err != nil {
+		log.Fatal(err)
+	}
 	statement.Exec()
 	statement.Close()
 
 	// create metadata table
-	statement, _ = db.Prepare("CREATE TABLE IF NOT EXISTS meta (id INTEGER PRIMARY KEY, version TEXT)")
+	statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS meta (key INTEGER PRIMARY KEY, version TEXT)")
+	if err != nil {
+		log.Fatal(err)
+	}
 	statement.Exec()
 	statement.Close()
 
 	// cache sql statements
-	stInsert, _ = db.Prepare("INSERT INTO db (firstname, lastname) VALUES (?, ?)")
+	stInsert, err = db.Prepare("INSERT INTO db (timestamp, user_id, message, message_group, message_severity) VALUES (?, ?, ?, ?, ?)")
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 var stInsert *sql.Stmt
 
-func AddPeep(fn, ln string) {
-	stInsert.Exec(fn, ln)
+// NewMessage stores a new message object in the database
+func NewMessage(msg api.Message) {
+	// TODO: test that adding multiple messages at same time actually functions as expected
+	_, err := stInsert.Exec(time.Now().Unix(), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
+	// _, err := stInsert.Exec(time.Now().UnixNano(), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
+	if err != nil {
+		log.Println("ERROR: database.NewMessage(): ", err)
+	}
 }
 
-// func GetMessages() []api.Message {
-func GetMessages() []string {
-	// var row struct {
-	//   age  int
-	//   name string
-	// }
-	// err = db.QueryRow("SELECT|people|age,name|age=?", 3).Scan(&row.age, &row.name)
-	rows, _ := db.Query("SELECT id, firstname, lastname FROM db")
-	var id int
-	var firstname string
-	var lastname string
-	var list []string
+// GetMessages returns all messages for a specific user
+func GetMessages(userId string) []api.Message {
+	rows, _ := db.Query("SELECT timestamp, user_id, message, message_group, message_severity FROM db WHERE user_id=?", userId)
+	var msgList []api.Message
 	for rows.Next() {
-		rows.Scan(&id, &firstname, &lastname)
-		list = append(list, strconv.Itoa(id)+": "+firstname+" "+lastname)
+		var msg api.Message
+		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
+		msgList = append(msgList, msg)
 	}
-	return list
+	return msgList
 }
