@@ -1,8 +1,8 @@
 package api
 
 type Message struct {
-	TimeStamp    string
-	UserID       int
+	TimeStamp    int
+	UserID       string
 	MessageGroup string
 	Message      string
 	Severity     string

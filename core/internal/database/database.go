@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"log"
+	"math/rand"
 	"os"
 	"time"
 
@@ -13,16 +14,22 @@ import (
 
 var db *sql.DB
 
-//init opens database and initializes if necessary
+// init opens database and initializes if necessary
 func init() {
 	log.Println("database.init()")
-	//Create a folder/directory at a full qualified path
-	err := os.MkdirAll("./data/", 0755)
-	if err != nil {
-		log.Fatal(err)
+
+	dbLocation := os.Getenv("DATABASE_FILE")
+	if dbLocation == "" {
+		dbLocation = "./data/database.db"
+		//Create default database directory if it doesn't exist
+		err := os.MkdirAll("./data/", 0755)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
-	db, err = sql.Open("sqlite3", "./data/database.db")
+	var err error
+	db, err = sql.Open("sqlite3", "file:"+dbLocation+"?cache=shared&mode=rwc&_journal_mode=WAL")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -43,6 +50,11 @@ func init() {
 	}
 	statement.Exec()
 	statement.Close()
+	//TODO: add meta into metadata table
+
+	// create random source
+	randSource := rand.NewSource(time.Now().UnixNano())
+	rand1 = rand.New(randSource)
 
 	// cache sql statements
 	stInsert, err = db.Prepare("INSERT INTO db (timestamp, user_id, message, message_group, message_severity) VALUES (?, ?, ?, ?, ?)")
@@ -51,21 +63,25 @@ func init() {
 	}
 }
 
+var rand1 *rand.Rand
 var stInsert *sql.Stmt
 
-// NewMessage stores a new message object in the database
-func NewMessage(msg api.Message) {
-	// TODO: test that adding multiple messages at same time actually functions as expected
-	_, err := stInsert.Exec(time.Now().Unix(), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
-	// _, err := stInsert.Exec(time.Now().UnixNano(), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
+// NewMessage stores a new message in the database
+func NewMessage(msg api.Message) error {
+	// add tiny bit of randomness to timestamp to ensure uniqueness for key
+	_, err := stInsert.Exec(time.Now().UnixNano()+rand1.Int63n(999), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
 	if err != nil {
-		log.Println("ERROR: database.NewMessage(): ", err)
+		return err
 	}
+	return nil
 }
 
-// GetMessages returns all messages for a specific user
-func GetMessages(userId string) []api.Message {
-	rows, _ := db.Query("SELECT timestamp, user_id, message, message_group, message_severity FROM db WHERE user_id=?", userId)
+// GetAllMessages returns all messages for a specific user
+func GetAllMessages(userId string) []api.Message {
+	rows, err := db.Query("SELECT timestamp, user_id, message, message_group, message_severity FROM db WHERE user_id=?", userId)
+	if err != nil {
+		log.Println("ERROR: database.GetAllMessages(): ", userId, err)
+	}
 	var msgList []api.Message
 	for rows.Next() {
 		var msg api.Message
