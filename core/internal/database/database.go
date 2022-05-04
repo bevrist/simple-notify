@@ -14,14 +14,20 @@ import (
 
 var db *sql.DB
 
-// init opens database and initializes if necessary
 func init() {
 	log.Println("database.init()")
+	// initialize when loading package.
+	// dbInit() is separate so it can be called again with different env vars when unit testing
+	dbInit()
+}
 
+// dbIinit opens database and initializes if necessary
+func dbInit() {
+	// load env var for database file location
 	dbLocation := os.Getenv("DATABASE_FILE")
 	if dbLocation == "" {
 		dbLocation = "./data/database.db"
-		//Create default database directory if it doesn't exist
+		// Create default database directory if it doesn't exist
 		err := os.MkdirAll("./data/", 0755)
 		if err != nil {
 			log.Fatal(err)
@@ -50,7 +56,7 @@ func init() {
 	}
 	statement.Exec()
 	statement.Close()
-	//TODO: add meta into metadata table
+	//TODO: add metadata into the metadata table
 
 	// create random source
 	randSource := rand.NewSource(time.Now().UnixNano())
@@ -66,7 +72,7 @@ func init() {
 var rand1 *rand.Rand
 var stInsert *sql.Stmt
 
-// NewMessage stores a new message in the database
+// NewMessage stores a new api.message in the database
 func NewMessage(msg api.Message) error {
 	// add tiny bit of randomness to timestamp to ensure uniqueness for key
 	_, err := stInsert.Exec(time.Now().UnixNano()+rand1.Int63n(999), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
@@ -76,11 +82,26 @@ func NewMessage(msg api.Message) error {
 	return nil
 }
 
-// GetAllMessages returns all messages for a specific user
+// GetAllMessages returns a slice of all api.messages for a specific userId
 func GetAllMessages(userId string) []api.Message {
 	rows, err := db.Query("SELECT timestamp, user_id, message, message_group, message_severity FROM db WHERE user_id=?", userId)
 	if err != nil {
 		log.Println("ERROR: database.GetAllMessages(): ", userId, err)
+	}
+	var msgList []api.Message
+	for rows.Next() {
+		var msg api.Message
+		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
+		msgList = append(msgList, msg)
+	}
+	return msgList
+}
+
+// GetNewMessages returns a slice of all api.messages for a specific userId newer than specified timestamp
+func GetNewMessages(userId string, timestamp int) []api.Message {
+	rows, err := db.Query("SELECT timestamp, user_id, message, message_group, message_severity FROM db WHERE user_id=? AND timestamp>=?", userId, timestamp)
+	if err != nil {
+		log.Println("ERROR: database.GetNewMessages(): ", userId, err)
 	}
 	var msgList []api.Message
 	for rows.Next() {

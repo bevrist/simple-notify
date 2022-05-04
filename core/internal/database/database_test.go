@@ -17,12 +17,27 @@ func TestMain(m *testing.M) {
 	}
 	os.Setenv("DATABASE_FILE", testDbFile)
 	defer os.Unsetenv("DATABASE_FILE")
+	dbInit() //reload init now that env is set
 	os.Exit(m.Run())
 }
 
 var testMsg = api.Message{
 	UserID:       "1",
 	Message:      "test message 1",
+	MessageGroup: "test group",
+	Severity:     "test severity",
+}
+
+var testMsg2 = api.Message{
+	UserID:       "1",
+	Message:      "test message 2",
+	MessageGroup: "test group",
+	Severity:     "test severity",
+}
+
+var testMsg3 = api.Message{
+	UserID:       "2",
+	Message:      "test message",
 	MessageGroup: "test group",
 	Severity:     "test severity",
 }
@@ -49,6 +64,8 @@ func BenchmarkNewMessage(b *testing.B) {
 	}
 }
 
+// TODO: BenchmarkGetAllMessage
+
 func TestGetAllMessage(t *testing.T) {
 	messages := GetAllMessages("1")
 	if len(messages) != 1 {
@@ -74,9 +91,15 @@ func TestGetAllMessage(t *testing.T) {
 }
 
 func TestGetAllMessageInvalidUser(t *testing.T) {
-	messages := GetAllMessages("-1")
+	messages := GetAllMessages("999")
 	if len(messages) != 0 {
 		t.Errorf("GetAllMessages failed: expected 0 messages, got %d", len(messages))
 		t.FailNow()
 	}
 }
+
+// TODO: test GetNewMessages()
+//get current timestamp
+//create new message for user
+//get all messages for user > 1
+//get new messages after timestamp = 1
