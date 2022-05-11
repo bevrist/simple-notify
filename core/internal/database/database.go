@@ -2,8 +2,8 @@ package database
 
 import (
 	"database/sql"
+	"encoding/base64"
 	"log"
-	"math/rand"
 	"os"
 	"time"
 
@@ -42,7 +42,7 @@ func dbInit() {
 
 	// create main table
 	// timestamp, user_id, message, message_group, message_severity
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS db (timestamp INTEGER PRIMARY KEY, user_id TEXT, message TEXT, message_group TEXT, message_severity TEXT)")
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS db (timestamp INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, message TEXT, message_group TEXT, message_severity TEXT)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -56,11 +56,12 @@ func dbInit() {
 	}
 	statement.Exec()
 	statement.Close()
+	// // check or populate version
+	// stInsert, err = db.Prepare("INSERT INTO db (timestamp, user_id, message, message_group, message_severity) VALUES (?, ?, ?, ?, ?)")
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 	//TODO: add metadata into the metadata table
-
-	// create random source
-	randSource := rand.NewSource(time.Now().UnixNano())
-	rand1 = rand.New(randSource)
 
 	// cache sql statements
 	stInsert, err = db.Prepare("INSERT INTO db (timestamp, user_id, message, message_group, message_severity) VALUES (?, ?, ?, ?, ?)")
@@ -69,17 +70,32 @@ func dbInit() {
 	}
 }
 
-var rand1 *rand.Rand
 var stInsert *sql.Stmt
 
 // NewMessage stores a new api.message in the database
 func NewMessage(msg api.Message) error {
-	// add tiny bit of randomness to timestamp to ensure uniqueness for key
-	_, err := stInsert.Exec(time.Now().UnixNano()+rand1.Int63n(999), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
+	// TODO: move timestamp out of database and into receivers
+	// _, err := stInsert.Exec(msg.TimeStamp, msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
+	msg = prepareMessage(msg)
+	_, err := stInsert.Exec(time.Now().UnixNano(), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func prepareMessage(in api.Message) api.Message {
+	in.Message = base64.StdEncoding.EncodeToString([]byte(in.Message))
+	return in
+}
+
+func readMessage(in api.Message) api.Message {
+	msgDec, err := base64.StdEncoding.DecodeString(in.Message)
+	if err != nil {
+		log.Printf("Some error occurred during base64 decode. Error %s", err.Error())
+	}
+	in.Message = string(msgDec)
+	return in
 }
 
 // GetAllMessages returns a slice of all api.messages for a specific userId
@@ -92,7 +108,7 @@ func GetAllMessages(userId string) []api.Message {
 	for rows.Next() {
 		var msg api.Message
 		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
-		msgList = append(msgList, msg)
+		msgList = append(msgList, readMessage(msg))
 	}
 	return msgList
 }

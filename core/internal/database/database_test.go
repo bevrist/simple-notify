@@ -21,28 +21,13 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-var testMsg = api.Message{
-	UserID:       "1",
-	Message:      "test message 1",
-	MessageGroup: "test group",
-	Severity:     "test severity",
-}
-
-var testMsg2 = api.Message{
-	UserID:       "1",
-	Message:      "test message 2",
-	MessageGroup: "test group",
-	Severity:     "test severity",
-}
-
-var testMsg3 = api.Message{
-	UserID:       "2",
-	Message:      "test message",
-	MessageGroup: "test group",
-	Severity:     "test severity",
-}
-
 func TestNewMessage(t *testing.T) {
+	var testMsg = api.Message{
+		UserID:       "1",
+		Message:      "test message 1",
+		MessageGroup: "test group",
+		Severity:     "test severity",
+	}
 	err := NewMessage(testMsg)
 	if err != nil {
 		t.Errorf("NewMessage failed: %v", err)
@@ -64,12 +49,33 @@ func BenchmarkNewMessage(b *testing.B) {
 	}
 }
 
-// TODO: BenchmarkGetAllMessage
+func TestGetAllMessages(t *testing.T) {
+	var testMsg = api.Message{
+		UserID:       "testgetallmessages",
+		Message:      "test message 1",
+		MessageGroup: "test group",
+		Severity:     "test severity",
+	}
+	var testMsg2 = api.Message{
+		UserID:       "testgetallmessages",
+		Message:      "test message 2",
+		MessageGroup: "test group 2",
+		Severity:     "test severity",
+	}
+	err := NewMessage(testMsg)
+	if err != nil {
+		t.Errorf("NewMessage failed: %v", err)
+		t.FailNow()
+	}
+	err = NewMessage(testMsg2)
+	if err != nil {
+		t.Errorf("NewMessage failed: %v", err)
+		t.FailNow()
+	}
 
-func TestGetAllMessage(t *testing.T) {
-	messages := GetAllMessages("1")
-	if len(messages) != 1 {
-		t.Errorf("GetAllMessages failed: expected 1 messages, got %d", len(messages))
+	messages := GetAllMessages("testgetallmessages")
+	if len(messages) != 2 {
+		t.Errorf("GetAllMessages failed: expected 2 messages, got %d", len(messages))
 		t.FailNow()
 	}
 	if messages[0].UserID != testMsg.UserID {
