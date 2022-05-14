@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"log"
 	"os"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 
@@ -13,6 +12,7 @@ import (
 )
 
 var db *sql.DB
+var SchemaVersion float32 = 1.0
 
 func init() {
 	log.Println("database.init()")
@@ -23,10 +23,10 @@ func init() {
 
 // dbIinit opens database and initializes if necessary
 func dbInit() {
-	// load env var for database file location
-	dbLocation := os.Getenv("DATABASE_FILE")
+	// load env var for database location
+	dbLocation := os.Getenv("DATABASE_DIR")
 	if dbLocation == "" {
-		dbLocation = "./data/database.db"
+		dbLocation = "./data"
 		// Create default database directory if it doesn't exist
 		err := os.MkdirAll("./data/", 0755)
 		if err != nil {
@@ -35,14 +35,14 @@ func dbInit() {
 	}
 
 	var err error
-	db, err = sql.Open("sqlite3", "file:"+dbLocation+"?cache=shared&mode=rwc&_journal_mode=WAL")
+	db, err = sql.Open("sqlite3", "file:"+dbLocation+"/database.db?cache=shared&mode=rwc&_journal_mode=WAL")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// create main table
-	// timestamp, user_id, message, message_group, message_severity
-	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS db (timestamp INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, message TEXT, message_group TEXT, message_severity TEXT)")
+	// timestamp, user_id, message, message_group, message_severity, source
+	statement, err := db.Prepare("CREATE TABLE IF NOT EXISTS db (timestamp INTEGER, user_id TEXT, message TEXT, message_group TEXT, message_severity TEXT, source TEXT)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -50,21 +50,24 @@ func dbInit() {
 	statement.Close()
 
 	// create metadata table
-	statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS meta (key INTEGER PRIMARY KEY, version TEXT)")
+	statement, err = db.Prepare("CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)")
 	if err != nil {
 		log.Fatal(err)
 	}
 	statement.Exec()
 	statement.Close()
-	// // check or populate version
-	// stInsert, err = db.Prepare("INSERT INTO db (timestamp, user_id, message, message_group, message_severity) VALUES (?, ?, ?, ?, ?)")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	//TODO: add metadata into the metadata table
 
+	// add metadata into the metadata table
+	statement, err = db.Prepare("INSERT INTO meta (key, value) VALUES (?, ?)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	statement.Exec("SchemaVersion", SchemaVersion)
+	statement.Close()
+
+	// =========================
 	// cache sql statements
-	stInsert, err = db.Prepare("INSERT INTO db (timestamp, user_id, message, message_group, message_severity) VALUES (?, ?, ?, ?, ?)")
+	stInsert, err = db.Prepare("INSERT INTO db (timestamp, user_id, message, message_group, message_severity, source) VALUES (?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -73,11 +76,9 @@ func dbInit() {
 var stInsert *sql.Stmt
 
 // NewMessage stores a new api.message in the database
-func NewMessage(msg api.Message) error {
-	// TODO: move timestamp out of database and into receivers
-	// _, err := stInsert.Exec(msg.TimeStamp, msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
+func NewMessage(msg api.Message, source string) error {
 	msg = prepareMessage(msg)
-	_, err := stInsert.Exec(time.Now().UnixNano(), msg.UserID, msg.Message, msg.MessageGroup, msg.Severity)
+	_, err := stInsert.Exec(msg.TimeStamp, msg.UserID, msg.Message, msg.MessageGroup, msg.Severity, source)
 	if err != nil {
 		return err
 	}
@@ -123,7 +124,7 @@ func GetNewMessages(userId string, timestamp int) []api.Message {
 	for rows.Next() {
 		var msg api.Message
 		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
-		msgList = append(msgList, msg)
+		msgList = append(msgList, readMessage(msg))
 	}
 	return msgList
 }
