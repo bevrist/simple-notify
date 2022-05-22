@@ -7,7 +7,7 @@ import (
 	rest "github.com/bevrist/simple-notify/core/internal/receiver/rest"
 )
 
-// AddHandlers returns a mux.Router with all the endpoints for each receiver
+// AddHandlers adds handlers for all receivers
 func AddHandlers(r *mux.Router) {
 	rest.AddHandlers(r)
 }

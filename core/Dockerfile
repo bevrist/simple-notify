@@ -16,11 +16,15 @@ RUN find /usr/local/go/src/ -name go.mod -execdir go build \;  \
 
 WORKDIR /app
 
-# RUN go get github.com/mattn/go-sqlite3
+RUN go get  \
+  github.com/mattn/go-sqlite3  \
+  github.com/gorilla/mux
 
 COPY . .
 
+# MAIN ENTRYPOINT
 # RUN go build -o /core .
 # ENTRYPOINT /core
 
+# DEV ENTRYPOINT
 ENTRYPOINT go run ./
