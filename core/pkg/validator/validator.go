@@ -1,3 +1,4 @@
+// validator implements data validation
 package validator
 
 import (
@@ -14,3 +15,5 @@ var reAscii *regexp.Regexp
 func AsciiValidator(ascii string) bool {
 	return reAscii.MatchString(ascii)
 }
+
+// TODO implement validator as methods for each type under common.go

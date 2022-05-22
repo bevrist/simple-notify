@@ -1,26 +1,27 @@
+// memory is a in-memory based implementation of the database interface
 package memory
 
 import (
-	"github.com/bevrist/simple-notify/core/pkg/api"
+	"github.com/bevrist/simple-notify/core/pkg/common"
 )
 
-var db []api.Message
+var db []common.Message
 var SchemaVersion float32 = 1.0
 
 // DbInit does nothing for memory database
 func DbInit() {
 }
 
-// NewMessage stores a new api.message in the database
-func NewMessage(msg api.Message, source string) error {
+// NewMessage stores a new common.message in the database
+func NewMessage(msg common.Message, source string) error {
 	db = append(db, msg)
 	return nil
 }
 
-// GetAllMessages returns a slice of all api.messages for a specific userId
-func GetAllMessages(userId string) []api.Message {
-	// only return db entries with api.userId == userId
-	var msgList []api.Message
+// GetAllMessages returns a slice of all common.messages for a specific userId
+func GetAllMessages(userId string) []common.Message {
+	// only return db entries with common.userId == userId
+	var msgList []common.Message
 	for _, msg := range db {
 		if msg.UserID == userId {
 			msgList = append(msgList, msg)
@@ -29,13 +30,13 @@ func GetAllMessages(userId string) []api.Message {
 	return msgList
 }
 
-// GetNewMessages returns a slice of all api.messages for a specific userId newer than specified timestamp
-func GetNewMessages(userId string, timestamp int) []api.Message {
+// GetNewMessages returns a slice of all common.messages for a specific userId newer than specified timestamp
+func GetNewMessages(userId string, timestamp int) []common.Message {
 	// loop through db in reverse until we find the first message older than timestamp
 	for i := len(db) - 1; i >= 0; i-- {
 		if db[i].TimeStamp < timestamp {
 			return db[i+1:]
 		}
 	}
-	return []api.Message{}
+	return []common.Message{}
 }

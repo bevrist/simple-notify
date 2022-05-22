@@ -1,3 +1,4 @@
+// sqlite is a sqlite backed database implementation of the database interface
 package sqlite
 
 import (
@@ -8,7 +9,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/bevrist/simple-notify/core/pkg/api"
+	"github.com/bevrist/simple-notify/core/pkg/common"
 )
 
 var db *sql.DB
@@ -68,8 +69,8 @@ func DbInit() {
 
 var stInsert *sql.Stmt
 
-// NewMessage stores a new api.message in the database
-func NewMessage(msg api.Message, source string) error {
+// NewMessage stores a new common.message in the database
+func NewMessage(msg common.Message, source string) error {
 	msg = prepareMessage(msg)
 	_, err := stInsert.Exec(msg.TimeStamp, msg.UserID, msg.Message, msg.MessageGroup, msg.Severity, source)
 	if err != nil {
@@ -78,14 +79,14 @@ func NewMessage(msg api.Message, source string) error {
 	return nil
 }
 
-// prepareMessage encodes the message portion of the api.Message struct before storing it in the database
-func prepareMessage(in api.Message) api.Message {
+// prepareMessage encodes the message portion of the common.Message struct before storing it in the database
+func prepareMessage(in common.Message) common.Message {
 	in.Message = base64.StdEncoding.EncodeToString([]byte(in.Message))
 	return in
 }
 
-// readMessage decodes the message portion of the api.Message struct before returning it
-func readMessage(in api.Message) api.Message {
+// readMessage decodes the message portion of the common.Message struct before returning it
+func readMessage(in common.Message) common.Message {
 	msgDec, err := base64.StdEncoding.DecodeString(in.Message)
 	if err != nil {
 		log.Printf("Some error occurred during base64 decode. Error %s", err.Error())
@@ -94,30 +95,30 @@ func readMessage(in api.Message) api.Message {
 	return in
 }
 
-// GetAllMessages returns a slice of all api.messages for a specific userId
-func GetAllMessages(userId string) []api.Message {
+// GetAllMessages returns a slice of all common.messages for a specific userId
+func GetAllMessages(userId string) []common.Message {
 	rows, err := db.Query("SELECT timestamp, user_id, message, message_group, message_severity FROM db WHERE user_id=?", userId)
 	if err != nil {
 		log.Println("ERROR: database.GetAllMessages(): ", userId, err)
 	}
-	var msgList []api.Message
+	var msgList []common.Message
 	for rows.Next() {
-		var msg api.Message
+		var msg common.Message
 		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
 		msgList = append(msgList, readMessage(msg))
 	}
 	return msgList
 }
 
-// GetNewMessages returns a slice of all api.messages for a specific userId newer than specified timestamp
-func GetNewMessages(userId string, timestamp int) []api.Message {
+// GetNewMessages returns a slice of all common.messages for a specific userId newer than specified timestamp
+func GetNewMessages(userId string, timestamp int) []common.Message {
 	rows, err := db.Query("SELECT timestamp, user_id, message, message_group, message_severity FROM db WHERE user_id=? AND timestamp>=?", userId, timestamp)
 	if err != nil {
 		log.Println("ERROR: database.GetNewMessages(): ", userId, err)
 	}
-	var msgList []api.Message
+	var msgList []common.Message
 	for rows.Next() {
-		var msg api.Message
+		var msg common.Message
 		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
 		msgList = append(msgList, readMessage(msg))
 	}

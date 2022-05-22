@@ -1,9 +1,9 @@
+// database interfaces with the data store for the application
 package database
 
 import (
 	db "github.com/bevrist/simple-notify/core/internal/database/memory"
-
-	"github.com/bevrist/simple-notify/core/pkg/api"
+	"github.com/bevrist/simple-notify/core/pkg/common"
 )
 
 // DbInit initializes the database with current env vars
@@ -11,17 +11,17 @@ func DbInit() {
 	db.DbInit()
 }
 
-// NewMessage stores a new api.message in the database noted with the specified receiver source
-func NewMessage(msg api.Message, source string) error {
+// NewMessage stores a new common.message in the database noted with the specified receiver source
+func NewMessage(msg common.Message, source string) error {
 	return db.NewMessage(msg, source)
 }
 
-// GetAllMessages returns a slice of all api.messages for a specific userId
-func GetAllMessages(userId string) []api.Message {
+// GetAllMessages returns a slice of all common.messages for a specific userId
+func GetAllMessages(userId string) []common.Message {
 	return db.GetAllMessages(userId)
 }
 
-// GetNewMessages returns a slice of all api.messages for a specific userId newer than specified timestamp
-func GetNewMessages(userId string, timestamp int) []api.Message {
+// GetNewMessages returns a slice of all common.messages for a specific userId newer than specified timestamp
+func GetNewMessages(userId string, timestamp int) []common.Message {
 	return db.GetNewMessages(userId, timestamp)
 }

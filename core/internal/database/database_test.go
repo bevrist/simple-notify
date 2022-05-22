@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/bevrist/simple-notify/core/pkg/api"
+	"github.com/bevrist/simple-notify/core/pkg/common"
 )
 
 // set database test file ENV for test
@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewMessage(t *testing.T) {
-	var testMsg = api.Message{
+	var testMsg = common.Message{
 		TimeStamp:    123,
 		UserID:       "1",
 		Message:      "test-message-1",
@@ -46,7 +46,7 @@ func BenchmarkNewMessage(b *testing.B) {
 	// run the Fib function b.N times
 	for n := 0; n < b.N; n++ {
 		i := fmt.Sprint(n)
-		msg := api.Message{
+		msg := common.Message{
 			TimeStamp:    123,
 			UserID:       "1",
 			Message:      "test message" + i,
@@ -58,14 +58,14 @@ func BenchmarkNewMessage(b *testing.B) {
 }
 
 func TestGetAllMessages(t *testing.T) {
-	var testMsg = api.Message{
+	var testMsg = common.Message{
 		TimeStamp:    123,
 		UserID:       "testgetallmessages",
 		Message:      "test-message-1",
 		MessageGroup: "test-group",
 		Severity:     "test-severity",
 	}
-	var testMsg2 = api.Message{
+	var testMsg2 = common.Message{
 		TimeStamp:    124,
 		UserID:       "testgetallmessages",
 		Message:      "test-message-2",
@@ -117,21 +117,21 @@ func TestGetAllMessageInvalidUser(t *testing.T) {
 }
 
 func TestGetNewMessages(t *testing.T) {
-	var testOldMsg = api.Message{
+	var testOldMsg = common.Message{
 		TimeStamp:    499,
 		UserID:       "TestGetNewMessages",
 		Message:      "test-message-0",
 		MessageGroup: "test-group",
 		Severity:     "test-severity",
 	}
-	var testMsg = api.Message{
+	var testMsg = common.Message{
 		TimeStamp:    500,
 		UserID:       "TestGetNewMessages",
 		Message:      "test-message-1",
 		MessageGroup: "test-group",
 		Severity:     "test-severity",
 	}
-	var testMsg2 = api.Message{
+	var testMsg2 = common.Message{
 		TimeStamp:    501,
 		UserID:       "TestGetNewMessages",
 		Message:      "test-message-2",

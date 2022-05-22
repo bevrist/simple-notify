@@ -10,3 +10,6 @@ test: ## Run the tests
 
 testv: ## Run the tests verbosely
 	@find . -name "*_test.go" -execdir go test -v ./ \;
+
+bench: ## run all benchmarks
+	@find . -name "*_test.go" -execdir go test -benchmem -bench=. \;
