@@ -22,7 +22,8 @@ func TestMain(m *testing.M) {
 	}
 	os.Setenv("DATABASE_DIR", testDbLocation)
 	defer os.Unsetenv("DATABASE_DIR")
-	dbInit() //reload init now that env is set
+	DbInit()               //reload init now that env is set
+	os.RemoveAll("./data") //clear unused auto-generated database folder
 	os.Exit(m.Run())
 }
 
@@ -30,9 +31,9 @@ func TestNewMessage(t *testing.T) {
 	var testMsg = api.Message{
 		TimeStamp:    123,
 		UserID:       "1",
-		Message:      "test message 1",
-		MessageGroup: "test group",
-		Severity:     "test severity",
+		Message:      "test-message-1",
+		MessageGroup: "test-group",
+		Severity:     "test-severity",
 	}
 	err := NewMessage(testMsg, "TestNewMessage")
 	if err != nil {
@@ -60,16 +61,16 @@ func TestGetAllMessages(t *testing.T) {
 	var testMsg = api.Message{
 		TimeStamp:    123,
 		UserID:       "testgetallmessages",
-		Message:      "test message 1",
-		MessageGroup: "test group",
-		Severity:     "test severity",
+		Message:      "test-message-1",
+		MessageGroup: "test-group",
+		Severity:     "test-severity",
 	}
 	var testMsg2 = api.Message{
 		TimeStamp:    124,
 		UserID:       "testgetallmessages",
-		Message:      "test message 2",
-		MessageGroup: "test group 2",
-		Severity:     "test severity",
+		Message:      "test-message-2",
+		MessageGroup: "test-group 2",
+		Severity:     "test-severity",
 	}
 	err := NewMessage(testMsg, "testgetallmessages")
 	if err != nil {
@@ -85,6 +86,8 @@ func TestGetAllMessages(t *testing.T) {
 	messages := GetAllMessages("testgetallmessages")
 	if len(messages) != 2 {
 		t.Errorf("GetAllMessages failed: expected 2 messages, got %d", len(messages))
+		fmt.Printf("messages:\n")
+		fmt.Printf("+%v\n", messages)
 		t.FailNow()
 	}
 	if messages[0].UserID != testMsg.UserID {
@@ -113,12 +116,69 @@ func TestGetAllMessageInvalidUser(t *testing.T) {
 	}
 }
 
-// TODO: test GetNewMessages()
-//get current timestamp
-//create new message for user
-//get all messages for user > 1
-//get new messages after timestamp = 1
+func TestGetNewMessages(t *testing.T) {
+	var testOldMsg = api.Message{
+		TimeStamp:    499,
+		UserID:       "TestGetNewMessages",
+		Message:      "test-message-0",
+		MessageGroup: "test-group",
+		Severity:     "test-severity",
+	}
+	var testMsg = api.Message{
+		TimeStamp:    500,
+		UserID:       "TestGetNewMessages",
+		Message:      "test-message-1",
+		MessageGroup: "test-group",
+		Severity:     "test-severity",
+	}
+	var testMsg2 = api.Message{
+		TimeStamp:    501,
+		UserID:       "TestGetNewMessages",
+		Message:      "test-message-2",
+		MessageGroup: "test-group 2",
+		Severity:     "test-severity",
+	}
+	err := NewMessage(testOldMsg, "TestGetNewMessages")
+	if err != nil {
+		t.Errorf("NewMessage failed: %v", err)
+		t.FailNow()
+	}
+	err = NewMessage(testMsg, "TestGetNewMessages")
+	if err != nil {
+		t.Errorf("NewMessage failed: %v", err)
+		t.FailNow()
+	}
+	err = NewMessage(testMsg2, "TestGetNewMessages")
+	if err != nil {
+		t.Errorf("NewMessage failed: %v", err)
+		t.FailNow()
+	}
 
-// TODO: test meta table
+	messages := GetNewMessages("TestGetNewMessages", 500)
+	if len(messages) != 2 {
+		t.Errorf("GetAllMessages failed: expected 2 messages, got %d", len(messages))
+		fmt.Printf("messages:\n")
+		fmt.Printf("+%v\n", messages)
+		t.FailNow()
+	}
+	if messages[0].UserID != testMsg.UserID {
+		t.Errorf("GetAllMessages failed: expected userId %s, got %s", testMsg.UserID, messages[0].UserID)
+		t.FailNow()
+	}
+	if messages[0].Message != testMsg.Message {
+		t.Errorf("GetAllMessages failed: expected message %s, got %s", testMsg.Message, messages[0].Message)
+		t.FailNow()
+	}
+	if messages[0].MessageGroup != testMsg.MessageGroup {
+		t.Errorf("GetAllMessages failed: expected messageGroup %s, got %s", testMsg.MessageGroup, messages[0].MessageGroup)
+		t.FailNow()
+	}
+	if messages[0].Severity != testMsg.Severity {
+		t.Errorf("GetAllMessages failed: expected severity %s, got %s", testMsg.Severity, messages[0].Severity)
+		t.FailNow()
+	}
+}
+
+// TODO: test meta
 
 // TODO: fuzz test database entries
