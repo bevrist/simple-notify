@@ -2,6 +2,7 @@
 package database
 
 import (
+	// FIXME: add check to ensure this never goes into production `^[^\/\/]*"(?:.+\/sqlite)"`
 	db "github.com/bevrist/simple-notify/core/internal/database/memory"
 	"github.com/bevrist/simple-notify/core/pkg/common"
 )

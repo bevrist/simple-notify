@@ -1,5 +1,5 @@
 // validator implements data validation
-package validator
+package common
 
 import (
 	"regexp"
@@ -11,9 +11,11 @@ func init() {
 
 var reAscii *regexp.Regexp
 
-// AsciiValidator returns true if input is [a-z0-9_-]
-func AsciiValidator(ascii string) bool {
+// asciiValidator returns true if input is [a-z0-9_-]
+func asciiValidator(ascii string) bool {
 	return reAscii.MatchString(ascii)
 }
 
-// TODO implement validator as methods for each type under common.go
+func (m Message) Validate() error {
+	return nil // TODO: implement this validator
+}
