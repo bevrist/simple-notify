@@ -40,8 +40,41 @@ func Test_setupRouterNoDuplicateHandlers(t *testing.T) {
 			t.Errorf("Handler is nil for path: %v", path)
 			t.FailNow()
 		}
+		// ignore if handler is bound to hostname
+		host, _ := route.GetHostTemplate()
+		if host != "" {
+			return nil
+		}
 		if handlers[handName] != "" {
 			t.Errorf("Duplicate handler found on paths: %v, %v", path, handlers[handName])
+			t.FailNow()
+		}
+		handlers[handName] = path
+		return nil
+	})
+}
+
+// Test_setupRouterNoDuplicateHostHandlers verifies that no hostname-bound routes use the same handler (or use nil handlers)
+func Test_setupRouterNoDuplicateHostHandlers(t *testing.T) {
+	r := setupRouter()
+	// iterate through routes and ensure no duplicate handlers
+	handlers := make(map[string]string)
+	r.Walk(func(route *mux.Route, router *mux.Router, ancestors []*mux.Route) error {
+		handler := route.GetHandler()
+		handName := fmt.Sprint(handler)
+		path, _ := route.GetPathTemplate()
+		if handName == "<nil>" {
+			t.Errorf("Handler is nil for path: %v", path)
+			t.FailNow()
+		}
+		// ignore if handler is NOT bound to hostname
+		host, _ := route.GetHostTemplate()
+		if host == "" {
+			return nil
+		}
+		path = host + path
+		if handlers[handName] != "" {
+			t.Errorf("Duplicate handler found on host paths: %v, %v", path, handlers[handName])
 			t.FailNow()
 		}
 		handlers[handName] = path

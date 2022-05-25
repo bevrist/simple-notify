@@ -14,12 +14,14 @@ import (
 	"github.com/bevrist/simple-notify/core/pkg/common"
 )
 
-const pfx string = "/api/receiver/rest" // prefix for all REST receiver endpoints
+const pfx string = "/api/rest"               // prefix for all REST receiver endpoints
+const host string = "rest.simple-notify.com" //hostname prefix for REST receiver endpoint
 
 // AddHandlers returns a mux.Router with all the endpoints for the REST receiver
 func AddHandlers(r *mux.Router) {
-	r.HandleFunc(pfx+"/healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, "ok") }).Methods(http.MethodGet, http.MethodHead)
+	r.HandleFunc(pfx+"/healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, pfx+" ok") }).Methods(http.MethodGet, http.MethodHead)
 	r.HandleFunc(pfx+"/new", newMessageHandler).Methods(http.MethodPost)
+	r.HandleFunc("/new", newMessageHandler).Methods(http.MethodPost).Host(host)
 }
 
 // newMessageHandler (/new)[POST] endpoint that accepts a message and stores it in database
@@ -47,4 +49,4 @@ func newMessageHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "ok")
 }
 
-// TODO add http based POST endpoint
+// TODO add http form based POST endpoint
