@@ -29,11 +29,11 @@ func TestMain(m *testing.M) {
 
 func TestNewMessage(t *testing.T) {
 	var testMsg = common.Message{
-		TimeStamp:    123,
-		UserID:       "1",
-		Message:      "test-message-1",
-		MessageGroup: "test-group",
-		Severity:     "test-severity",
+		TimeStamp: 123,
+		UserID:    "1",
+		Message:   "test-message-1",
+		StreamID:  "test-group",
+		Severity:  "test-severity",
 	}
 	err := NewMessage(testMsg, "TestNewMessage")
 	if err != nil {
@@ -47,11 +47,11 @@ func BenchmarkNewMessage(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		i := fmt.Sprint(n)
 		msg := common.Message{
-			TimeStamp:    123,
-			UserID:       "1",
-			Message:      "test message" + i,
-			MessageGroup: "test group" + i,
-			Severity:     "test severity" + i,
+			TimeStamp: 123,
+			UserID:    "1",
+			Message:   "test message" + i,
+			StreamID:  "test group" + i,
+			Severity:  "test severity" + i,
 		}
 		NewMessage(msg, "BenchmarkNewMessage")
 	}
@@ -59,18 +59,18 @@ func BenchmarkNewMessage(b *testing.B) {
 
 func TestGetAllMessages(t *testing.T) {
 	var testMsg = common.Message{
-		TimeStamp:    123,
-		UserID:       "testgetallmessages",
-		Message:      "test-message-1",
-		MessageGroup: "test-group",
-		Severity:     "test-severity",
+		TimeStamp: 123,
+		UserID:    "testgetallmessages",
+		Message:   "test-message-1",
+		StreamID:  "test-group",
+		Severity:  "test-severity",
 	}
 	var testMsg2 = common.Message{
-		TimeStamp:    124,
-		UserID:       "testgetallmessages",
-		Message:      "test-message-2",
-		MessageGroup: "test-group 2",
-		Severity:     "test-severity",
+		TimeStamp: 124,
+		UserID:    "testgetallmessages",
+		Message:   "test-message-2",
+		StreamID:  "test-group 2",
+		Severity:  "test-severity",
 	}
 	err := NewMessage(testMsg, "testgetallmessages")
 	if err != nil {
@@ -98,8 +98,8 @@ func TestGetAllMessages(t *testing.T) {
 		t.Errorf("GetAllMessages failed: expected message %s, got %s", testMsg.Message, messages[0].Message)
 		t.FailNow()
 	}
-	if messages[0].MessageGroup != testMsg.MessageGroup {
-		t.Errorf("GetAllMessages failed: expected messageGroup %s, got %s", testMsg.MessageGroup, messages[0].MessageGroup)
+	if messages[0].StreamID != testMsg.StreamID {
+		t.Errorf("GetAllMessages failed: expected messageGroup %s, got %s", testMsg.StreamID, messages[0].StreamID)
 		t.FailNow()
 	}
 	if messages[0].Severity != testMsg.Severity {
@@ -118,25 +118,25 @@ func TestGetAllMessageInvalidUser(t *testing.T) {
 
 func TestGetNewMessages(t *testing.T) {
 	var testOldMsg = common.Message{
-		TimeStamp:    499,
-		UserID:       "TestGetNewMessages",
-		Message:      "test-message-0",
-		MessageGroup: "test-group",
-		Severity:     "test-severity",
+		TimeStamp: 499,
+		UserID:    "TestGetNewMessages",
+		Message:   "test-message-0",
+		StreamID:  "test-group",
+		Severity:  "test-severity",
 	}
 	var testMsg = common.Message{
-		TimeStamp:    500,
-		UserID:       "TestGetNewMessages",
-		Message:      "test-message-1",
-		MessageGroup: "test-group",
-		Severity:     "test-severity",
+		TimeStamp: 500,
+		UserID:    "TestGetNewMessages",
+		Message:   "test-message-1",
+		StreamID:  "test-group",
+		Severity:  "test-severity",
 	}
 	var testMsg2 = common.Message{
-		TimeStamp:    501,
-		UserID:       "TestGetNewMessages",
-		Message:      "test-message-2",
-		MessageGroup: "test-group 2",
-		Severity:     "test-severity",
+		TimeStamp: 501,
+		UserID:    "TestGetNewMessages",
+		Message:   "test-message-2",
+		StreamID:  "test-group 2",
+		Severity:  "test-severity",
 	}
 	err := NewMessage(testOldMsg, "TestGetNewMessages")
 	if err != nil {
@@ -169,8 +169,8 @@ func TestGetNewMessages(t *testing.T) {
 		t.Errorf("GetAllMessages failed: expected message %s, got %s", testMsg.Message, messages[0].Message)
 		t.FailNow()
 	}
-	if messages[0].MessageGroup != testMsg.MessageGroup {
-		t.Errorf("GetAllMessages failed: expected messageGroup %s, got %s", testMsg.MessageGroup, messages[0].MessageGroup)
+	if messages[0].StreamID != testMsg.StreamID {
+		t.Errorf("GetAllMessages failed: expected messageGroup %s, got %s", testMsg.StreamID, messages[0].StreamID)
 		t.FailNow()
 	}
 	if messages[0].Severity != testMsg.Severity {

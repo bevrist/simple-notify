@@ -72,7 +72,7 @@ var stInsert *sql.Stmt
 // NewMessage stores a new common.message in the database
 func NewMessage(msg common.Message, source string) error {
 	msg = prepareMessage(msg)
-	_, err := stInsert.Exec(msg.TimeStamp, msg.UserID, msg.Message, msg.MessageGroup, msg.Severity, source)
+	_, err := stInsert.Exec(msg.TimeStamp, msg.UserID, msg.Message, msg.StreamID, msg.Severity, source)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func GetAllMessages(userId string) []common.Message {
 	var msgList []common.Message
 	for rows.Next() {
 		var msg common.Message
-		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
+		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.StreamID, &msg.Severity)
 		msgList = append(msgList, readMessage(msg))
 	}
 	return msgList
@@ -119,7 +119,7 @@ func GetNewMessages(userId string, timestamp int) []common.Message {
 	var msgList []common.Message
 	for rows.Next() {
 		var msg common.Message
-		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.MessageGroup, &msg.Severity)
+		rows.Scan(&msg.TimeStamp, &msg.UserID, &msg.Message, &msg.StreamID, &msg.Severity)
 		msgList = append(msgList, readMessage(msg))
 	}
 	return msgList
