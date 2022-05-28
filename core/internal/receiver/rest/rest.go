@@ -14,13 +14,11 @@ import (
 	"github.com/bevrist/simple-notify/core/pkg/common"
 )
 
-const pfx string = "/api/rest"               // prefix for all REST receiver endpoints
-const host string = "rest.simple-notify.com" //hostname prefix for REST receiver endpoint
+const host string = "rest.simple-notify.com" //hostname for REST receiver endpoint
 
 // AddHandlers returns a mux.Router with all the endpoints for the REST receiver
 func AddHandlers(r *mux.Router) {
-	r.HandleFunc(pfx+"/healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, pfx+" ok") }).Methods(http.MethodGet, http.MethodHead)
-	r.HandleFunc(pfx+"/new", newMessageHandler).Methods(http.MethodPost)
+	r.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) { fmt.Fprint(w, host+" - ok") }).Methods(http.MethodGet, http.MethodHead).Host(host)
 	r.HandleFunc("/new", newMessageHandler).Methods(http.MethodPost).Host(host)
 }
 
